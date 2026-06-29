@@ -1,35 +1,145 @@
 # Documentation: https://rmk.rs/docs/configuration.html
 [keyboard]
-name = "RMK Keyboard"
-product_name = "RMK Keyboard"
+name = "roba"
+product_name = "roba"
 vendor_id = 0x4c4b
 product_id = 0x4643
-manufacturer = "RMK"
-chip = "rp2040"
+manufacturer = "Yowie"
+chip = "nrf52840"
 
-[matrix]
-# Row and col pins are mandatory
-row_pins = ["PIN_6", "PIN_7", "PIN_8", "PIN_9"]
-col_pins = ["PIN_19", "PIN_20", "PIN_21"]
+[behavior.morse]
+hold_timeout = "200ms"
 
-# RMK uses col2row as the default matrix diode direction, if you want to use a row2col matrix, add `row2col = true`
-# row2col = true
+[split]
+connection = "ble"
+
+[ble]
+enabled = true
+
+[rmk]
+# BLE プロファイル数 (N)
+ble_profiles_num = 5
+
+[split.central]
+rows = 4
+cols = 5
+row_offset = 0
+col_offset = 6
+ble_addr = [0x18, 0xe2, 0x47, 0x33, 0x32, 0x01]
+# central 側のバッテリー計測設定（[ble] より優先）
+battery_adc_pin = "P0_31"
+# XIAO nRF52840 の BAT 分圧 (1M + 510k): measured=510, total=1510
+adc_divider_measured = 510
+adc_divider_total = 1510
+
+[split.central.matrix]
+matrix_type = "normal"
+row_pins = ["P0_03", "P0_28", "P0_29", "P1_11"]
+col_pins = ["P1_15", "P1_14", "P1_13", "P1_12", "P0_10"]
+
+[[split.peripheral]]
+rows = 4
+cols = 6
+row_offset = 0
+col_offset = 0
+ble_addr = [0x18, 0xe2, 0x47, 0x33, 0x32, 0x02]
+
+[split.peripheral.matrix]
+matrix_type = "normal"
+row_pins = ["P0_03", "P0_28", "P0_29", "P1_11"]
+col_pins = ["P1_15", "P1_14", "P1_13", "P1_12", "P0_10", "P0_09"]
+
+# 左手側ロータリーエンコーダー (ALPS EC11)
+# まず TOML 設定で実装し、必要なら peripheral.rs で Rust 実装へ切り替える。
+[[split.peripheral.input_device.encoder]]
+pin_a = "P0_05"
+pin_b = "P0_02"
+internal_pullup = true
+# ZMK: a=xiao_d5=P0_05, b=xiao_d0=P0_02 (steps=24, triggers-per-rotation=10)
+# pin_a は P0_04(D4) ではなく P0_05(D5) が正しい
+phase = "resolution"
+resolution = 2
+reverse = false
 
 [layout]
 rows = 4
-cols = 3
-layers = 2
+cols = 11
+layers = 9
 keymap = [
     [
-        ["A", "B", "C"],
-        ["Kc1", "Kc2", "Kc3"],
-        ["LCtrl", "MO(1)", "LShift"],
-        ["OSL(1)", "LT(2, Kc9)", "LM(1, LShift | LGui)"]
+        ["Q", "W", "E", "R", "T", "_", "Y", "U", "I", "O", "P"],
+        ["A", "S", "D", "F", "G", "_", "H", "J", "K", "L", "Semicolon"],
+        ["MT(Z, LShift)", "X", "C", "V", "B", "F14", "N", "M", "Comma", "Dot", "Slash"],
+        ["LCtrl", "LGui", "F16", "Backspace", "LT(2, Enter)", "LT(3, Language2)", "F13", "F15", "LT(3, Language1)", "LT(1, Space)", "LAlt"],
     ],
     [
-        ["_", "TT(1)", "TG(2)"],
-        ["_", "_", "_"],
-        ["_", "_", "_"],
-        ["_", "_", "_"]
+        ["Kc1", "Kc2", "Kc3", "Kc4", "Kc5", "_", "Kc6", "Kc7", "Kc8", "Kc9", "Kc0"],
+        ["_", "_", "LeftBracket", "RightBracket", "_", "_", "_", "WM(Kc9, LShift)", "WM(Kc0, LShift)", "_", "Backslash"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "WM(Backslash, LShift)"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    ],
+    [
+        ["WM(Kc1, LShift)", "WM(Kc2, LShift)", "WM(Kc3, LShift)", "WM(Kc4, LShift)", "WM(Kc5, LShift)", "_", "WM(Kc6, LShift)", "WM(Kc7, LShift)", "WM(Kc8, LShift)", "Minus", "WM(Minus, LShift)"],
+        ["Grave", "WM(Grave, LShift)", "WM(Quote, LShift)", "Quote", "_", "_", "MouseBtn3", "MouseBtn1", "MouseBtn2", "Equal", "WM(Equal, LShift)"],
+        ["F1", "F2", "F3", "F4", "F5", "F11", "F6", "F7", "F8", "F9", "F10"],
+        ["_", "_", "_", "_", "_", "_", "_", "F12", "_", "_", "_"],
+    ],
+    [
+        ["_", "WM(Tab, LCtrl|LShift)", "PrintScreen", "WM(Tab, LCtrl)", "_", "_", "_", "Home", "Up", "End", "_"],
+        ["_", "WM(Left, LGui)", "WM(Right, LGui)", "WM(Left, LCtrl|LGui)", "WM(Right, LCtrl|LGui)", "_", "_", "Left", "Down", "Right", "_"],
+        ["_", "LShift", "WM(Left, LGui|LShift)", "WM(Right, LGui|LShift)", "_", "_", "_", "Delete", "PageUp", "PageDown", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    ],
+    [
+        ["_", "_", "_", "_", "_", "_", "User0", "User1", "User2", "User3", "User4"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "User7"],
+        ["_", "_", "_", "_", "_", "_", "_", "No", "_", "_", "No"],
+    ],
+    [
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "MouseBtn3", "MouseBtn2", "MouseBtn1", "_", "_", "_", "MouseBtn1", "MouseBtn2", "MouseBtn3", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    ],
+    [
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    ],
+    [
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+    ],
+    [
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
+        ["_", "_", "_", "_", "_", "_", "_", "_", "_", "_", "_"],
     ],
 ]
+
+# Encoder 0: [CW, CCW]
+encoder_map = [
+    [["MouseWheelDown", "MouseWheelUp"]],
+    [["MouseWheelLeft", "MouseWheelRight"]],
+    [["MouseWheelDown", "MouseWheelUp"]],
+    [["AudioVolDown", "AudioVolUp"]],
+    [["MouseWheelDown", "MouseWheelUp"]],
+    [["MouseWheelDown", "MouseWheelUp"]],
+    [["MouseWheelDown", "MouseWheelUp"]],
+    [["MouseWheelDown", "MouseWheelUp"]],
+    [["MouseWheelDown", "MouseWheelUp"]],
+]
+
+[event.action]
+# central.rs で ActionEvent::subscriber() を使うため、subscriber 枠を確保する
+subs = 1
+
+[host]
+vial_enabled = true
+# Vial Security Unlock (同時押し)
+unlock_keys = [[0, 0], [0, 1]]
